@@ -1,2 +1,2 @@
 # MiniFlappyBird
-Reimplement for FlappyBbird
+Reimplement for FlappyBbird,it hasn't be completed,wait for updating...
