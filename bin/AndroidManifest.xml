@@ -24,7 +24,7 @@
         </activity>
         
         <activity android:name=".MiniFlappyView"/>
-        <activity android:name=".GameOverView"/>
+        <activity android:name=".ScoreView"/>
         
     </application>
 

@@ -24,7 +24,7 @@ import android.view.SurfaceView;
 
 public class FlappySurfaceView extends SurfaceView implements Callback,Runnable 
 {
-	
+
 	private SurfaceHolder sfh;
 	//画笔
 	private Paint paint;
@@ -35,11 +35,11 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 	//画布
 	private Canvas canvas;
 	//设备屏幕的宽度和高度
-	private static int screenW,screenH;
+	public static int screenW,screenH;
 	//定义游戏状态
 	private final static int GAME_MENU=0;//游戏准备
 	private final static int GAMEING=1;//游戏中
-	private final static int GAME_OVER=-1;//游戏结束
+	private final static int GAME_OVER=-1;//游戏结束	
 	//游戏初始状态
 	private static int gameState=GAME_MENU;
 	//地板（即下界）的坐标
@@ -55,7 +55,7 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 	//bird的坐标
 	private int bird[]=new int[2];
 	//bird的宽度(由于是个圆，所以高度跟宽度一样)
-	private int bird_width=24;
+	private int bird_width=20;
 	//???
 	private int bird_v=0;
 	private int bird_a=2;
@@ -66,18 +66,27 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 	private ArrayList<int[]> remove_walls=new ArrayList<int[]>();
 	//水管的宽度和高度
 	private int wall_width=50;
-	private int wall_height=100;
+	private int wall_height=115;
 	//水管的间隔
 	private int wall_step=30;
+	
+	public final static int L_SCORE_STEP=15;
+	private final static int S_SCORE_STEP=10;
 	
 	Bitmap bg,floor_img;
 	Bitmap bird_middle,bird_up,bird_down;
 	Bitmap pipe_down,pipe_up;
-	Bitmap scoreNumber[]=new Bitmap[10];
-	Bitmap text_game_over,score_panel,button_play;
+	Bitmap scoreNumber1[]=new Bitmap[10];
+	Bitmap scoreNumber2[]=new Bitmap[10];
+	Bitmap medals[]=new Bitmap[4];
+	Bitmap text_ready,tutorial,text_game_over,score_panel,button_play,button_score;
 	
 	int bitmap_resource[]={R.drawable.zero,R.drawable.one,R.drawable.two,R.drawable.three,R.drawable.four,
 			R.drawable.five,R.drawable.six,R.drawable.seven,R.drawable.eight,R.drawable.nine};
+	int score_resource[]={R.drawable.number_score_00,R.drawable.number_score_01,R.drawable.number_score_02,R.drawable.number_score_03
+			,R.drawable.number_score_04,R.drawable.number_score_05,R.drawable.number_score_06,R.drawable.number_score_07
+			,R.drawable.number_score_08,R.drawable.number_score_09};
+	int medal_resource[]={R.drawable.medals_0,R.drawable.medals_1,R.drawable.medals_2,R.drawable.medals_3};
 	
 	private Rect bg_area,floor_area1,floor_area2,bird_area,pipe_up_area,pipe_down_area;
 	int right;
@@ -108,8 +117,6 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 		right=0;
 		screenH=this.getHeight();
 		bg_area=new Rect(0,0,screenW,screenH-dp2px(150));
-		//floor_area1=new Rect(0,screenH-dp2px(150),screenW/2,screenH);	
-		//floor_area2=new Rect(screenW/2,screenH-dp2px(150),screenW,screenH);
 		screenH=screenH-dp2px(150);
 		bg=BitmapFactory.decodeResource(getResources(), R.drawable.bg);
 		floor_img=BitmapFactory.decodeResource(getResources(), R.drawable.floor);
@@ -118,12 +125,20 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 		bird_down=BitmapFactory.decodeResource(getResources(), R.drawable.bird_down);
 		pipe_down=BitmapFactory.decodeResource(getResources(), R.drawable.pipe_down);
 		pipe_up=BitmapFactory.decodeResource(getResources(), R.drawable.pipe_up);
+		text_ready=BitmapFactory.decodeResource(getResources(), R.drawable.text_ready);
+		tutorial=BitmapFactory.decodeResource(getResources(), R.drawable.tutorial);
 		text_game_over=BitmapFactory.decodeResource(getResources(), R.drawable.text_game_over);
 		score_panel=BitmapFactory.decodeResource(getResources(), R.drawable.score_panel);
-		button_play=BitmapFactory.decodeResource(getResources(), R.drawable.button_play);
+		button_play=BitmapFactory.decodeResource(getResources(), R.drawable.button_play);	
+		button_score=BitmapFactory.decodeResource(getResources(), R.drawable.button_score);
 		for(int i=0;i<10;i++)
 		{
-			scoreNumber[i]=BitmapFactory.decodeResource(getResources(), bitmap_resource[i]);
+			scoreNumber1[i]=BitmapFactory.decodeResource(getResources(), bitmap_resource[i]);
+			scoreNumber2[i]=BitmapFactory.decodeResource(getResources(), score_resource[i]);
+		}
+		for(int i=0;i<4;i++)
+		{
+			medals[i]=BitmapFactory.decodeResource(getResources(), medal_resource[i]);
 		}
 		initGame();
 		flag=true;
@@ -147,18 +162,18 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			level_value=0;
 			//初始化bird的坐标
 			bird[0]=screenW/3;
-			bird[1]=screenH/2;
+			bird[1]=screenH/3;
 			//清除上轮游戏留下的水管信息
-			walls.clear();
+			if(null!=walls) walls.clear();
 			//将各个数据从dp换算成px
 			floor_width=dp2px(15);
-			speed=dp2px(speed);
+			speed=dp2px(3);
 			bird_width=dp2px(10);
 			bird_a=dp2px(2);
 			bird_vUp=-dp2px(16);
 			wall_width=dp2px(45);
 			wall_height=dp2px(100);
-			wall_step=wall_width*4;
+			wall_step=wall_width*3;	
 		}
 	}
 	//将dp换算成px
@@ -202,80 +217,63 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 				if(right<=0) right=screenW/2;			
 				canvas.drawBitmap(bg, null, bg_area, null);				
 				if(gameState==GAMEING)
-				{
+				{				
 					canvas.drawBitmap(floor_img,right,screenH,null);
 					canvas.drawBitmap(floor_img,right-screenW/2,screenH,null);
 				}
+				else if(gameState==GAME_MENU)
+				{
+					Rect text_area=new Rect(dp2px(80),dp2px(50),screenW-dp2px(80),dp2px(100));
+					Rect tutorial_area=new Rect(screenW/2-dp2px(100),screenH/2,screenW/2+dp2px(100),screenH/2+dp2px(200));
+					canvas.drawBitmap(text_ready,null,text_area,null);
+					canvas.drawBitmap(tutorial,null,tutorial_area,null);
+					canvas.drawBitmap(floor_img,screenW/2,screenH,null);
+					canvas.drawBitmap(floor_img,0,screenH,null);
+				}
 				else 
 				{
-					//canvas.drawBitmap(floor_img,null,floor_area,null);
 					canvas.drawBitmap(floor_img,screenW/2,screenH,null);
 					canvas.drawBitmap(floor_img,0,screenH,null);			
 				}
-				//canvas.drawColor(Color.TRANSPARENT,Mode.CLEAR);
-				//canvas.drawColor(Color.BLACK);
-				//int floor_start=floor[0];
-				//绘制地板（下界）
-				//while(floor_start<screenW)
-				//{
-				//	canvas.drawLine(floor_start, floor[1], floor_start+floor_width, floor[1], paint);
-				//	floor_start+=floor_width*2;
-				//}
 				//绘制水管
 				for(int i=0;i<walls.size();i++)
 				{
 					int wall[]=walls.get(i);
-					/*float pts[]=
-						{
-							wall[0],0,wall[0],wall[1],
-							wall[0],wall[1],wall[0]+wall_width,wall[1],
-							wall[0]+wall_width,wall[1],wall[0]+wall_width,0,
-							wall[0],floor[1],wall[0],wall[1]+wall_height,
-							wall[0],wall[1]+wall_height,wall[0]+wall_width,wall[1]+wall_height,
-							wall[0]+wall_width,wall[1]+wall_height,wall[0]+wall_width,floor[1]
-						};
-					canvas.drawLines(pts, paint);*/
 					pipe_down_area=new Rect(wall[0],0,wall[0]+wall_width,wall[1]);
 					pipe_up_area=new Rect(wall[0],wall[1]+wall_height,wall[0]+wall_width,screenH);
 					canvas.drawBitmap(pipe_down, null, pipe_down_area, null);
 					canvas.drawBitmap(pipe_up,null,pipe_up_area,null);					
 				}
-				//canvas.drawCircle(bird[0], bird[1], bird_width,paint);
 				bird_area=new Rect(bird[0]-bird_width,bird[1]-bird_width,bird[0]+bird_width,bird[1]+bird_width);
 				int b=right%128;
 				if(b>=0 && b<32)
 				{
-					//canvas.drawBitmap(bird_middle, bird[0], bird[1], null);
 					canvas.drawBitmap(bird_middle, null, bird_area, null);
 				}
 				else if(b>=32 && b<64)
 				{
-					//canvas.drawBitmap(bird_up, bird[0], bird[1], null);
 					canvas.drawBitmap(bird_up, null, bird_area, null);
 				}
 				else if(b>=64 && b<96)
 				{
-					//canvas.drawBitmap(bird_middle, bird[0], bird[1], null);
 					canvas.drawBitmap(bird_middle, null, bird_area, null);
 				}
 				else if(b>=96 && b<128)
 				{
-					//canvas.drawBitmap(bird_down, bird[0], bird[1], null);
 					canvas.drawBitmap(bird_down, null, bird_area, null);
 				}
-				//canvas.drawText(String.valueOf(level_value), level[0], level[1], paint);
-				drawText(level_value, canvas);
+				drawText(level_value, canvas,scoreNumber1,level[0],level[1],L_SCORE_STEP);
 				if(gameState==GAME_OVER)
-				{
-					Rect text_area=new Rect(dp2px(80),dp2px(50),dp2px(280),dp2px(100));
-					Rect panel_area=new Rect(dp2px(50),dp2px(100),dp2px(310),dp2px(300));
-					Rect button_area=new Rect(dp2px(130),dp2px(300),dp2px(230),dp2px(350));
+				{				
+					int medal=MiniFlappyView.context.saveScore(level_value);
+					Rect text_area=new Rect(dp2px(80),dp2px(50),screenW-dp2px(80),dp2px(100));
+					Rect panel_area=new Rect(dp2px(10),dp2px(100),screenW-dp2px(10),dp2px(280));
+					Rect button_play_area=new Rect(dp2px(50),dp2px(300),dp2px(150),dp2px(350));
+					Rect button_score_area=new Rect(dp2px(210),dp2px(300),dp2px(310),dp2px(350));
 					canvas.drawBitmap(text_game_over,null,text_area,null);
-					canvas.drawBitmap(score_panel,null,panel_area,null);
-					canvas.drawBitmap(button_play,null,button_area,null);
-					//MiniFlappyView.context.showMessage(level_value);
-					//gameState=GAME_MENU;
-					//initGame();
+					canvas.drawBitmap(drawImageOnImage(MainActivity.context.getBestScore(), level_value,medals[medal]), null, panel_area,null);
+					canvas.drawBitmap(button_play,null,button_play_area,null);
+					canvas.drawBitmap(button_score,null,button_score_area,null);
 				}
 			}
 		}
@@ -373,9 +371,9 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 	public void getScoreNumber(int level_value)
 	{
 		if(score!=null) score.clear();
-		if(level_value==0)
+		if(level_value>=0 && level_value<=9)
 		{
-			score.add(0);
+			score.add(level_value);
 			return;
 		}
 		int r=level_value,m;
@@ -387,15 +385,32 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 		}
 	}
 	
-	public void drawText(int level_value,Canvas canvas)
+	public void drawText(int level_value,Canvas canvas,Bitmap scoreNumber[],int locationX,int locationY,int score_step)
 	{
 		getScoreNumber(level_value);
-		int position=dp2px(15)*score.size()/2;
+		int position=dp2px(score_step)*score.size()/2;
 		for(int i=0;i<score.size();i++)
 		{
-			canvas.drawBitmap(scoreNumber[score.get(i)], level[0]+position,level[1], null);
-			position-=dp2px(15);
+			canvas.drawBitmap(scoreNumber[score.get(i)], locationX+position,locationY, null);
+			position-=dp2px(score_step);
 		}
+	}
+	
+	public Bitmap drawImageOnImage(int best_level,int score_level,Bitmap medal)
+	{
+		Bitmap newBitmap=score_panel;
+		if(!newBitmap.isMutable())
+		{
+			newBitmap=score_panel.copy(Bitmap.Config.ARGB_8888, true);
+		}
+		Canvas canvas2=new Canvas(newBitmap);
+		Rect medal_area=new Rect(dp2px(20),dp2px(30),dp2px(50),dp2px(60));
+		canvas2.drawBitmap(medal, null, medal_area, null);
+		drawText(score_level,canvas2,scoreNumber2,dp2px(120),dp2px(25),S_SCORE_STEP);
+		drawText(best_level,canvas2,scoreNumber2,dp2px(120),dp2px(50),S_SCORE_STEP);
+		canvas2.save(Canvas.ALL_SAVE_FLAG);
+		canvas2.restore();
+		return newBitmap;
 	}
 	
 	@Override
@@ -416,27 +431,20 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 				{
 					float x=event.getX();
 					float y=event.getY();
-					if(x>=dp2px(130) && x<=dp2px(230) && y>=dp2px(300) && y<=dp2px(350))
+					if(x>=dp2px(50) && x<=dp2px(150) && y>=dp2px(300) && y<=dp2px(350))
 					{
 						MiniFlappyView.context.showMessage(level_value);
 						gameState=GAME_MENU;
 						initGame();
 					}
+					else if(x>=dp2px(210) && x<=dp2px(310) && y>=dp2px(300) && y<=dp2px(350))
+					{
+						MiniFlappyView.context.showScore();
+					}
 				}
 				break;
 			}
 		}
-		/*if(gameState==GAME_OVER)
-		{
-			float x=event.getX();
-			float y=event.getY();
-			if(x>=dp2px(130) && x<=dp2px(230) && y>=dp2px(300) && y<=dp2px(350))
-			{
-				MiniFlappyView.context.showMessage(level_value);
-				gameState=GAME_MENU;
-				initGame();
-			}
-		}*/
 		return true;
 	}
 	
