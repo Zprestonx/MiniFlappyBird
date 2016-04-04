@@ -58,7 +58,9 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 	private int bird_width=20;
 	//???
 	private int bird_v=0;
+	//每点击一次的上升高度
 	private int bird_a=2;
+	//每点击一次的下降高度
 	private int bird_vUp=-16;
 	//需要绘制的水管坐标
 	private ArrayList<int[]> walls=new ArrayList<int[]>();
@@ -69,53 +71,62 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 	private int wall_height=115;
 	//水管的间隔
 	private int wall_step=30;
-	
+	//绘制分数时两个数字间的间隔
 	public final static int L_SCORE_STEP=15;
-	private final static int S_SCORE_STEP=10;
-	
+	public final static int S_SCORE_STEP=10;
+	//背景图和地板图
 	Bitmap bg,floor_img;
+	//绘制小鸟动画的三张图
 	Bitmap bird_middle,bird_up,bird_down;
+	//向上和向下的水管图
 	Bitmap pipe_down,pipe_up;
+	//大号分数的位图
 	Bitmap scoreNumber1[]=new Bitmap[10];
+	//小号分数的位图
 	Bitmap scoreNumber2[]=new Bitmap[10];
+	//各种奖牌的位图
 	Bitmap medals[]=new Bitmap[4];
+	//游戏准备位图，提示位图，游戏结束位图，分数板位图，重新开始按钮位图，查看成绩信息按钮位图
 	Bitmap text_ready,tutorial,text_game_over,score_panel,button_play,button_score;
-	
+	//大号分数的资源ID
 	int bitmap_resource[]={R.drawable.zero,R.drawable.one,R.drawable.two,R.drawable.three,R.drawable.four,
 			R.drawable.five,R.drawable.six,R.drawable.seven,R.drawable.eight,R.drawable.nine};
+	//小号资源的资源ID
 	int score_resource[]={R.drawable.number_score_00,R.drawable.number_score_01,R.drawable.number_score_02,R.drawable.number_score_03
 			,R.drawable.number_score_04,R.drawable.number_score_05,R.drawable.number_score_06,R.drawable.number_score_07
 			,R.drawable.number_score_08,R.drawable.number_score_09};
+	//各种奖牌的资源ID
 	int medal_resource[]={R.drawable.medals_0,R.drawable.medals_1,R.drawable.medals_2,R.drawable.medals_3};
-	
+	//绘制背景图，地板，小鸟，水管的区域
 	private Rect bg_area,floor_area1,floor_area2,bird_area,pipe_up_area,pipe_down_area;
-	int right;
-	
+	//绘制地板区域的水平坐标
+	int floor_positionX;
+	//临时存放成绩各位上的数字
 	private ArrayList<Integer> score=new ArrayList<Integer>();
 	
 	public FlappySurfaceView(Context context)
 	{
 		super(context);
 		sfh=this.getHolder();
+		//设置透明
 		setZOrderOnTop(true);
 		sfh.setFormat(PixelFormat.TRANSLUCENT);
 		sfh.addCallback(this);
-		paint=new Paint();
-		paint.setColor(Color.BLACK);
-		paint.setAntiAlias(true);
-		paint.setTextSize(50);
-		paint.setStyle(Style.STROKE);
+		//取得焦点
 		setFocusable(true);
 		setFocusableInTouchMode(true);
+		//保持屏幕常亮
 		this.setKeepScreenOn(true);
 	}
 	
 	@Override
 	public void surfaceCreated(SurfaceHolder surfaceHolder)
 	{
+		//获取设备屏幕的宽度
 		screenW=this.getWidth();
-		right=0;
+		//获取设备屏幕的高度
 		screenH=this.getHeight();
+		floor_positionX=0;
 		bg_area=new Rect(0,0,screenW,screenH-dp2px(150));
 		screenH=screenH-dp2px(150);
 		bg=BitmapFactory.decodeResource(getResources(), R.drawable.bg);
@@ -194,6 +205,7 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			long end=System.currentTimeMillis();
 			try
 			{
+				//50毫秒执行一次，防止速度过快
 				if(end-start<50)
 				{
 					thread.sleep(50-(end-start));
@@ -205,7 +217,7 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			}
 		}
 	}
-	
+	//绘制游戏动画
 	public void myDraw()
 	{
 		try
@@ -213,13 +225,13 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			canvas=sfh.lockCanvas();
 			if(canvas!=null)
 			{
-				right=right-speed;
-				if(right<=0) right=screenW/2;			
+				floor_positionX=floor_positionX-speed;
+				if(floor_positionX<=0) floor_positionX=screenW/2;			
 				canvas.drawBitmap(bg, null, bg_area, null);				
 				if(gameState==GAMEING)
 				{				
-					canvas.drawBitmap(floor_img,right,screenH,null);
-					canvas.drawBitmap(floor_img,right-screenW/2,screenH,null);
+					canvas.drawBitmap(floor_img,floor_positionX,screenH,null);
+					canvas.drawBitmap(floor_img,floor_positionX-screenW/2,screenH,null);
 				}
 				else if(gameState==GAME_MENU)
 				{
@@ -244,8 +256,9 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 					canvas.drawBitmap(pipe_down, null, pipe_down_area, null);
 					canvas.drawBitmap(pipe_up,null,pipe_up_area,null);					
 				}
+				//绘制小鸟
 				bird_area=new Rect(bird[0]-bird_width,bird[1]-bird_width,bird[0]+bird_width,bird[1]+bird_width);
-				int b=right%128;
+				int b=floor_positionX%128;
 				if(b>=0 && b<32)
 				{
 					canvas.drawBitmap(bird_middle, null, bird_area, null);
@@ -262,7 +275,9 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 				{
 					canvas.drawBitmap(bird_down, null, bird_area, null);
 				}
+				//绘制当前成绩
 				drawText(level_value, canvas,scoreNumber1,level[0],level[1],L_SCORE_STEP);
+				//绘制游戏结束时的分数板
 				if(gameState==GAME_OVER)
 				{				
 					int medal=MiniFlappyView.context.saveScore(level_value);
@@ -287,8 +302,9 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 				sfh.unlockCanvasAndPost(canvas);
 		}
 	}
-	
+	//水管移动距离，判断是否需要绘制水管
 	private int move_step=0;
+	//游戏逻辑
 	public void logic()
 	{
 		switch(gameState)
@@ -298,25 +314,23 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 		case GAMEING:
 			bird_v+=bird_a;
 			bird[1]+=bird_v;
+			//小鸟撞到地板
 			if(bird[1]>floor[1]-bird_width)
 			{
 				bird[1]=floor[1]-bird_width;
 				gameState=GAME_OVER;
 			}
-			if(floor[0]<-floor_width)
-			{
-				floor[0]+=floor_width*2;
-			}
-			floor[0]-=speed;
 			remove_walls.clear();
 			for(int i=0;i<walls.size();i++)
 			{
 				int wall[]=walls.get(i);
 				wall[0]-=speed;
+				//将超出屏幕范围的水管存入remove_walls集中
 				if(wall[0]<-wall_width)
 				{
 					remove_walls.add(wall);
 				}
+				//小鸟撞到水管
 				else if(bird[0]+bird_width>=wall[0] && bird[0]-bird_width<=wall[0]+wall_width &&
 						(bird[1]<=wall[1]+bird_width || bird[1]+bird_width>=wall[1]+wall_height))
 				{
@@ -334,7 +348,9 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			{
 				walls.removeAll(remove_walls);
 			}
+			//水管移动距离增加speed
 			move_step+=speed;
+			//移动距离超过水管间隔，绘制新的水管
 			if(move_step>wall_step)
 			{
 				int wall[]=new int[]{screenW,(int)(Math.random()*(floor[1]-2*wall_height)+0.5*wall_height)};
@@ -343,31 +359,22 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			}
 			break;
 		case GAME_OVER:
+			//小鸟撞到水管，但还停在空中
 			if(bird[1]+bird_width<floor[1])
 			{
+				//让小鸟一直处于下落的状态，注意此时的bird_v=-16
 				bird_v+=bird_a;
 				bird[1]+=bird_v;
+				//让小鸟停在地板上
 				if(bird[1]+bird_width>floor[1])
 				{
 					bird[1]=floor[1]-bird_width;
-				}
-				else
-				{
-					/*Rect text_area=new Rect(dp2px(80),dp2px(50),dp2px(280),dp2px(100));
-					Rect panel_area=new Rect(dp2px(50),dp2px(100),dp2px(190),dp2px(300));
-					Rect button_area=new Rect(dp2px(70),dp2px(350),dp2px(170),dp2px(400));
-					canvas.drawBitmap(text_game_over,null,text_area,null);
-					canvas.drawBitmap(score_panel,null,panel_area,null);
-					canvas.drawBitmap(button_play,null,button_area,null);*/
-					//MiniFlappyView.context.showMessage(level_value);
-					//gameState=GAME_MENU;
-					//initGame();
 				}
 			}
 			break;
 		}
 	}
-	
+	//用取余方法获取level_value各个数位上的数值
 	public void getScoreNumber(int level_value)
 	{
 		if(score!=null) score.clear();
@@ -384,10 +391,11 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			score.add(m);
 		}
 	}
-	
+	//在(locationX,locationY)处绘制成绩
 	public void drawText(int level_value,Canvas canvas,Bitmap scoreNumber[],int locationX,int locationY,int score_step)
 	{
 		getScoreNumber(level_value);
+		//各个数值的间隔
 		int position=dp2px(score_step)*score.size()/2;
 		for(int i=0;i<score.size();i++)
 		{
@@ -395,7 +403,7 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 			position-=dp2px(score_step);
 		}
 	}
-	
+	//在位图上进行绘制，将金牌绘制在分数板上
 	public Bitmap drawImageOnImage(int best_level,int score_level,Bitmap medal)
 	{
 		Bitmap newBitmap=score_panel;
@@ -427,16 +435,20 @@ public class FlappySurfaceView extends SurfaceView implements Callback,Runnable
 				bird_v=bird_vUp;
 				break;
 			case GAME_OVER:
-				if(bird[1]+bird_width>=floor[1])
+				//小鸟掉在地板上
+				if(bird[1]+bird_width==floor[1])
 				{
+					//获取手指点击处的坐标
 					float x=event.getX();
 					float y=event.getY();
+					//点击了重新游戏的按钮
 					if(x>=dp2px(50) && x<=dp2px(150) && y>=dp2px(300) && y<=dp2px(350))
 					{
-						MiniFlappyView.context.showMessage(level_value);
+						MiniFlappyView.context.playAgain();
 						gameState=GAME_MENU;
 						initGame();
 					}
+					//点击了查看成绩信息的按钮
 					else if(x>=dp2px(210) && x<=dp2px(310) && y>=dp2px(300) && y<=dp2px(350))
 					{
 						MiniFlappyView.context.showScore();

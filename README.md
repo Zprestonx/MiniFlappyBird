@@ -1,2 +1,2 @@
 # MiniFlappyBird
-Reimplement for FlappyBbird,it hasn't be completed,wait for updating...
+重写了FlappyBird小游戏,适合初学者看
