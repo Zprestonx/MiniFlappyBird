@@ -25,7 +25,9 @@ import android.widget.LinearLayout;
 
 public class ScoreView extends Activity 
 {
+	//设备屏幕的高度和宽度
 	public static int screenW,screenH;
+	//存放成绩各位数上的数值
 	ArrayList<Integer> score=new ArrayList<Integer>();
 	Bitmap info_panel,copyright;
 	Bitmap scoreNumber[]=new Bitmap[10];
@@ -37,9 +39,12 @@ public class ScoreView extends Activity
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
+		//全屏显示
 		this.getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		//无标题显示
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.score_view);
+		//获取设备屏幕的高度和宽度
 		DisplayMetrics dm = new DisplayMetrics();
 		this.getWindowManager().getDefaultDisplay().getMetrics(dm);
 		screenW=dm.widthPixels;
@@ -61,17 +66,17 @@ public class ScoreView extends Activity
         public GameInfoView(Context context) 
         {   
             super(context);   
-            Paint paint=new Paint();
+/*            Paint paint=new Paint();
     		paint.setColor(Color.BLACK);
     		paint.setAntiAlias(true);
     		paint.setTextSize(50);
-    		paint.setStyle(Style.STROKE);   
-        }   
-                                                                                                                                  
-        //在这里我们将测试canvas提供的绘制图形方法   
+    		paint.setStyle(Style.STROKE);  */ 
+        } 
+        
         @Override   
         protected void onDraw(Canvas canvas) 
         {   	
+        	//成绩信息的绘制区域
         	Rect panel_area=new Rect(dp2px(10),dp2px(180),screenW-dp2px(10),screenH-dp2px(180));
         	canvas.drawBitmap(info_panel, null, panel_area, null);
     		int position=dp2px(140);
@@ -121,7 +126,7 @@ public class ScoreView extends Activity
     	}
                                                                                                                                   
     }
-	
+	//获取成绩和游戏信息
 	private int[] getGameInfo()
 	{
 		int gameInfo[]=new int[4];
